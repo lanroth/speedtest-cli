@@ -24,13 +24,13 @@ or
 Github
 ~~~~~~
 
-``pip install git+https://github.com/sivel/speedtest-cli.git``
+``pip install git+https://github.com/lanroth/speedtest-cli.git``
 
 or
 
 ::
 
-    git clone https://github.com/sivel/speedtest-cli.git
+    git clone https://github.com/lanroth/speedtest-cli.git
     python speedtest-cli/setup.py install
 
 Just download (Like the way it used to be)
@@ -38,14 +38,14 @@ Just download (Like the way it used to be)
 
 ::
 
-    wget -O speedtest-cli https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py
+    wget -O speedtest-cli https://raw.github.com/lanroth/speedtest-cli/master/speedtest_cli.py
     chmod +x speedtest-cli
 
 or
 
 ::
 
-    curl -o speedtest-cli https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py
+    curl -o speedtest-cli https://raw.github.com/lanroth/speedtest-cli/master/speedtest_cli.py
     chmod +x speedtest-cli
 
 Usage
@@ -53,13 +53,13 @@ Usage
 
 ::
 
-    $ speedtest-cli -h
+
     usage: speedtest-cli [-h] [--share] [--simple] [--list] [--server SERVER]
                          [--mini MINI]
 
     Command line interface for testing internet bandwidth using speedtest.net.
     --------------------------------------------------------------------------
-    https://github.com/sivel/speedtest-cli
+    https://github.com/lanroth/speedtest-cli
 
     optional arguments:
       -h, --help       show this help message and exit
@@ -69,4 +69,23 @@ Usage
       --list           Display a list of speedtest.net servers sorted by distance
       --server SERVER  Specify a server ID to test against
       --mini MINI      URL of the Speedtest Mini server
+
+    usage: speedtest_cli.py [-h] [--share] [--csv] [--simple] [--list]
+                            [--server SERVER] [--mini MINI] [--version]
+
+    Command line interface for testing internet bandwidth using speedtest.net.
+    --------------------------------------------------------------------------
+    https://github.com/lanroth/speedtest-cli
+
+    optional arguments:
+      -h, --help       show this help message and exit
+      --share          Generate and provide a URL to the speedtest.net share
+                       results image
+      --csv            output comma separated values for
+                       ping,download,upload,image url (if --share used)
+      --simple         Suppress verbose output, only show basic information
+      --list           Display a list of speedtest.net servers sorted by distance
+      --server SERVER  Specify a server ID to test against
+      --mini MINI      URL of the Speedtest Mini server
+      --version        Show the version number and exit
 

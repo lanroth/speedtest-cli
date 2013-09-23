@@ -4,13 +4,13 @@ import setuptools
 
 setuptools.setup(
     name='speedtest-cli',
-    version='0.2.1',
+    version='0.2.2',
     description=('Command line interface for testing internet bandwidth using '
                  'speedtest.net'),
     long_description=open('README.rst').read(),
-    author='Matt Martz',
-    author_email='matt@sivel.net',
-    url='https://github.com/sivel/speedtest-cli',
+    author='Lanroth',
+    author_email='github@lanroth.com',
+    url='https://github.com/lanroth/speedtest-cli',
     license='Apache License, Version 2.0',
     py_modules=['speedtest_cli'],
     entry_points={

@@ -365,7 +365,7 @@ def speedtest():
         'speedtest.net.\n'
         '------------------------------------------------------------'
         '--------------\n'
-        'https://github.com/sivel/speedtest-cli')
+        'https://github.com/lanroth/speedtest-cli')
 
     parser = ArgParser(description=description)
     try:
@@ -375,6 +375,9 @@ def speedtest():
     parser.add_argument('--share', action='store_true',
                         help='Generate and provide a URL to the speedtest.net '
                              'share results image')
+    parser.add_argument('--csv', action='store_true',
+                        help='output comma separated values for '
+                             'ping,download,upload,image url (if --share used)')
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
@@ -396,11 +399,14 @@ def speedtest():
     if args.version:
         version()
 
-    if not args.simple:
+    verbose=not(args.simple or args.csv)
+    csvOut=[]
+
+    if verbose:
         print_('Retrieving speedtest.net configuration...')
     config = getConfig()
 
-    if not args.simple:
+    if verbose:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
         servers = closestServers(config['client'], True)
@@ -418,7 +424,7 @@ def speedtest():
     else:
         servers = closestServers(config['client'])
 
-    if not args.simple:
+    if verbose:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
 
     if args.server:
@@ -460,15 +466,18 @@ def speedtest():
         except:
             best = servers[0]
     else:
-        if not args.simple:
+        if verbose:
             print_('Selecting best server based on ping...')
         best = getBestServer(servers)
 
-    if not args.simple:
+    if verbose:
         print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                '%(latency)s ms' % best)
-    else:
+    elif args.simple:
         print_('Ping: %(latency)s ms' % best)
+    else:
+        csvOut.append('%(latency)s' % best)
+
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -476,24 +485,29 @@ def speedtest():
         for i in range(0, 4):
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
-    if not args.simple:
+    if verbose:
         print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
+    dlspeed = downloadSpeed(urls, not verbose)
+    if verbose:
         print_()
-    print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
-
+    if args.csv:
+	csvOut.append('%0.2f'  % ((dlspeed / 1000 / 1000) * 8))
+    else:
+        print_('Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8))
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
     for size in sizesizes:
         for i in range(0, 25):
             sizes.append(size)
-    if not args.simple:
+    if verbose:
         print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
+    ulspeed = uploadSpeed(best['url'], sizes, not verbose)
+    if verbose:
         print_()
-    print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
+    if args.csv:
+	csvOut.append('%0.2f'  % ((ulspeed / 1000 / 1000) * 8))
+    else:
+        print_('Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
@@ -534,9 +548,15 @@ def speedtest():
             print_('Could not submit results to speedtest.net')
             sys.exit(1)
 
-        print_('Share results: http://www.speedtest.net/result/%s.png' %
+        if not args.csv:
+            print_('Share results: http://www.speedtest.net/result/%s.png' %
+               resultid[0])
+        else:
+            csvOut.append('http://www.speedtest.net/result/%s.png' %
                resultid[0])
 
+    if args.csv:
+        print_(','.join(csvOut))
 
 def main():
     try:
