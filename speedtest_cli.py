@@ -536,6 +536,9 @@ def speedtest():
     parser.add_argument('--share', action='store_true',
                         help='Generate and provide a URL to the speedtest.net '
                              'share results image')
+    parser.add_argument('--csv', action='store_true',
+                        help='output comma separated values for '
+                        'ping,download,upload,image url (if --share used)')
     parser.add_argument('--simple', action='store_true',
                         help='Suppress verbose output, only show basic '
                              'information')
@@ -561,6 +564,9 @@ def speedtest():
     if args.version:
         version()
 
+    verbose=not(args.simple or args.csv)
+    csvOut=[]
+
     socket.setdefaulttimeout(args.timeout)
 
     # If specified bind to a specific IP address
@@ -568,7 +574,7 @@ def speedtest():
         source = args.source
         socket.socket = bound_socket
 
-    if not args.simple:
+    if verbose:
         print_('Retrieving speedtest.net configuration...')
     try:
         config = getConfig()
@@ -576,7 +582,7 @@ def speedtest():
         print_('Cannot retrieve speedtest configuration')
         sys.exit(1)
 
-    if not args.simple:
+    if verbose:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
         servers = closestServers(config['client'], True)
@@ -600,7 +606,7 @@ def speedtest():
     else:
         servers = closestServers(config['client'])
 
-    if not args.simple:
+    if verbose:
         print_('Testing from %(isp)s (%(ip)s)...' % config['client'])
 
     if args.server:
@@ -658,11 +664,11 @@ def speedtest():
         except:
             best = servers[0]
     else:
-        if not args.simple:
+        if verbose:
             print_('Selecting best server based on latency...')
         best = getBestServer(servers)
 
-    if not args.simple:
+    if verbose:
         # Python 2.7 and newer seem to be ok with the resultant encoding
         # from parsing the XML, but older versions have some issues.
         # This block should detect whether we need to encode or not
@@ -673,8 +679,10 @@ def speedtest():
         except NameError:
             print_('Hosted by %(sponsor)s (%(name)s) [%(d)0.2f km]: '
                    '%(latency)s ms' % best)
-    else:
+    elif args.simple:
         print_('Ping: %(latency)s ms' % best)
+    else:
+        csvOut.append('%(latency)s' % best)
 
     sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
     urls = []
@@ -682,26 +690,32 @@ def speedtest():
         for i in range(0, 4):
             urls.append('%s/random%sx%s.jpg' %
                         (os.path.dirname(best['url']), size, size))
-    if not args.simple:
+    if verbose:
         print_('Testing download speed', end='')
-    dlspeed = downloadSpeed(urls, args.simple)
-    if not args.simple:
+    dlspeed = downloadSpeed(urls, not verbose)
+    if verbose:
         print_()
-    print_('Download: %0.2f M%s/s' %
-           ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.csv:
+        csvOut.append('%0.2f'  % ((dlspeed / 1000 / 1000) * 8))
+    else:
+        print_('Download: %0.2f M%s/s' %
+               ((dlspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
     for size in sizesizes:
         for i in range(0, 25):
             sizes.append(size)
-    if not args.simple:
+    if verbose:
         print_('Testing upload speed', end='')
-    ulspeed = uploadSpeed(best['url'], sizes, args.simple)
-    if not args.simple:
+    ulspeed = uploadSpeed(best['url'], sizes, not verbose)
+    if verbose:
         print_()
-    print_('Upload: %0.2f M%s/s' %
-           ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
+    if args.csv:
+        csvOut.append('%0.2f' % ((ulspeed / 1000 / 1000) * 8))
+    else:
+        print_('Upload: %0.2f M%s/s' %
+               ((ulspeed / 1000 / 1000) * args.units[1], args.units[0]))
 
     if args.share and args.mini:
         print_('Cannot generate a speedtest.net share results image while '
@@ -748,9 +762,16 @@ def speedtest():
         if not resultid or len(resultid) != 1:
             print_('Could not submit results to speedtest.net')
             sys.exit(1)
+        
+        if args.csv:
+            csvOut.append('Share results: https://www.speedtest.net/result/%s.png' %
+                   resultid[0])
+        else:
+            print_('Share results: https://www.speedtest.net/result/%s.png' %
+                   resultid[0])
 
-        print_('Share results: https://www.speedtest.net/result/%s.png' %
-               resultid[0])
+    if args.csv:
+        print_(','.join(csvOut))
 
 
 def main():
